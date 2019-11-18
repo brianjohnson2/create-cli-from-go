@@ -5,12 +5,14 @@ a Go file and then place the built file in your /usr/local/bin.
 
 ### Prerequisites
 
+Golang:
 ```
-Golang
 Installation instructions: https://golang.org/dl/
 ```
 
 ## Usage
+
+How to install:
 
 ```
 git clone https://github.com/brianjohnson2/create-cli-from-go.git
@@ -23,3 +25,6 @@ Confirm installation was successful:
 ```
 createcommand --help
 ```
+
+The application will create the command based on the first and only argument that is being based. The file that will be built defaults to main.go, 
+but you can specify the file name by passing to -flag.
