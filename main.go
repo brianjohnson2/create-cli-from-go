@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -11,20 +10,22 @@ import (
 	"github.com/gookit/color"
 )
 
-var filePath = "/usr/local/bin/"
-var fileName = flag.String("file", "main.go", "The file to build.")
+var (
+	filePath = "/usr/local/bin/"
+	fileName = flag.String("file", "main.go", "The file to build.")
+	err      error
+)
 
 // Builds go file, defaults to main.go unless file specified with the -file flag
 func buildFromGoFile() {
 
 	flag.Parse()
-	fmt.Println("Building file:", *fileName)
 	buildCmd := exec.Command("go", "build", "-o", os.Args[1], *fileName)
 	buildCmd.Stderr = os.Stderr
-	err5 := buildCmd.Run()
-	if err5 != nil {
+	if err := buildCmd.Run(); err != nil {
 		color.Red.Println("error: unable to build go file.")
-		os.Exit(1)
+	} else {
+		fmt.Println("Building file:", *fileName)
 	}
 }
 
@@ -33,24 +34,19 @@ func copyCommandtoPath() {
 
 	buildFromGoFile()
 	copyCommand := exec.Command("cp", os.Args[1], filePath)
-	err4 := copyCommand.Run()
-	if err4 != nil {
+	if err := copyCommand.Run(); err != nil {
 		color.Red.Println("error: unable to copy command to " + filePath)
-		os.Exit(1)
+	} else {
+		color.Green.Println("success: created command " + os.Args[1])
 	}
-
-	color.Green.Println("success: created command " + os.Args[1])
 }
 
 func main() {
 
 	// Checks to see if argument for command name was entered
 	if len(os.Args) != 2 {
-		err1 := errors.New("error: expecting name to create command")
-		if err1 != nil {
-			color.Red.Println(err1)
-			os.Exit(1)
-		}
+		color.Red.Println("Usage: [command-name]")
+		return
 	}
 
 	filePath += os.Args[1]
@@ -59,7 +55,7 @@ func main() {
 	checkCommandAlreadyExists, _ := os.Stat(filePath)
 	if checkCommandAlreadyExists != nil {
 		scanner := bufio.NewScanner(os.Stdin)
-		fmt.Println("The file already exists. Do you want to overwrite in? (y/n)")
+		fmt.Println("The file already exists. Do you want to overwrite in? (y)")
 		for scanner.Scan() {
 			userInput := scanner.Text()
 			fmt.Println(userInput)
@@ -67,17 +63,12 @@ func main() {
 			case "y":
 				fmt.Println("Proceeding with command..")
 				copyCommandtoPath()
-				os.Exit(0)
+				return
 			default:
-				abort := errors.New("abort: cancelling command creation")
-				if abort != nil {
-					fmt.Println(abort)
-					os.Exit(1)
-				}
+				color.Red.Println("abort: cancelling command creation")
 			}
 		}
 	} else {
 		copyCommandtoPath()
-		os.Exit(0)
 	}
 }
